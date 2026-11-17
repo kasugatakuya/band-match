@@ -30,6 +30,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <span>© BandMatch</span>
             <Link href="/" className="hover:text-ink">記事を探す</Link>
             <Link href="/posts/new" className="hover:text-ink">記事を書く</Link>
+            <span className="flex flex-wrap items-center gap-x-2 sm:ml-auto">
+              関連サイト
+              <a
+                href="https://scale-compass-delta.vercel.app/"
+                target="_blank"
+                rel="noopener"
+                className="font-bold text-ink underline decoration-line underline-offset-4 hover:decoration-ink"
+              >
+                Scale Compass — コード進行からスケールを探す
+                <span className="sr-only">(新しいタブで開きます)</span>
+              </a>
+            </span>
           </div>
         </footer>
       </body>
