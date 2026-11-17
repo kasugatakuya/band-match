@@ -14,6 +14,8 @@ const zen = Zen_Kaku_Gothic_New({
 export const metadata: Metadata = {
   title: { default: "BandMatch | バンドメンバー募集・加入希望", template: "%s | BandMatch" },
   description: "バンドメンバーを探している人と、バンドに入りたい人をつなぐ募集サイト。地域・パート・ジャンル・好きなアーティストで探せます。",
+  // Google Search Console の所有権確認用
+  verification: { google: "r4vs5K6kyRpFbT2eQ3xlFxlQbUmRrk_8z6irkNv4HmM" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
