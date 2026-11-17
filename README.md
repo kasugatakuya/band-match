@@ -36,6 +36,7 @@ pnpm dev                             # http://localhost:3000
 ```
 
 - 送信されたメール(確認メール・通知メール)は http://localhost:8025 で見られます。実際には送信されません
+- Docker を使わない構成にもできます。`backend/.env` の `DATABASE_URL` を Neon の接続文字列に、`MAIL_DRIVER` を `resend`(または `log`)にすれば、`docker compose up -d` は不要です。その場合でも結合テスト(`make test`)と `make sqlc` には Docker が必要です
 - ログイン画面の「開発用ログイン」で、登録なしにテストユーザー2人を切り替えられます(`APP_ENV=development` のときだけ有効)
 
 ### Google ログインを有効にする
