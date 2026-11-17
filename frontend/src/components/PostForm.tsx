@@ -84,6 +84,7 @@ export function PostForm({ post, defaultPrefecture = "" }: { post?: Post; defaul
             </label>
           ))}
         </div>
+        <p className="mt-1.5 text-xs text-muted">メンバー募集・加入希望は、それぞれ3件まで投稿できます(締め切った記事も数に含みます)。</p>
       </fieldset>
 
       <Field label="タイトル" required>

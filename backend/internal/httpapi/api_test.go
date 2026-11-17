@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -484,4 +485,54 @@ func TestProfileRequiredAndDevLogin(t *testing.T) {
 func jsonInt(n int64) string {
 	b, _ := json.Marshal(n)
 	return string(b)
+}
+
+func TestPostLimitPerKind(t *testing.T) {
+	e := setup(t, "production")
+	a, _ := e.signupVerified("a@example.com")
+	b, _ := e.signupVerified("b@example.com")
+
+	join := func(title string) map[string]any {
+		p := postBody(title)
+		p["kind"] = "join"
+		return p
+	}
+
+	// メンバー募集は3件まで
+	var recruitIDs []string
+	for i := 0; i < 3; i++ {
+		recruitIDs = append(recruitIDs, createPost(a, postBody(fmt.Sprintf("募集%d", i))))
+	}
+	res := a.do("POST", "/posts", postBody("募集4件目"), 409)
+	if res["code"] != "post_limit" {
+		t.Fatalf("code = %v, want post_limit", res["code"])
+	}
+
+	// 加入希望は別枠で3件まで
+	var joinIDs []string
+	for i := 0; i < 3; i++ {
+		joinIDs = append(joinIDs, createPost(a, join(fmt.Sprintf("加入%d", i))))
+	}
+	a.do("POST", "/posts", join("加入4件目"), 409)
+
+	// 上限は人ごと
+	createPost(b, postBody("別の人の募集"))
+
+	// 上限に達していても、既存の記事の編集と締め切りはできる
+	edit := postBody("募集0を編集")
+	edit["status"] = "closed"
+	a.do("PATCH", "/posts/"+recruitIDs[0], edit, 200)
+
+	// 締め切った記事も数に含まれる
+	a.do("POST", "/posts", postBody("締め切り後の募集"), 409)
+
+	// 種類を変えて上限を超えることはできない
+	toJoin := join("募集を加入希望に変更")
+	toJoin["status"] = "open"
+	a.do("PATCH", "/posts/"+recruitIDs[1], toJoin, 409)
+
+	// 削除すると枠が空く
+	a.do("DELETE", "/posts/"+joinIDs[0], nil, 200)
+	a.do("PATCH", "/posts/"+recruitIDs[1], toJoin, 200)
+	createPost(a, postBody("枠が空いたので募集"))
 }

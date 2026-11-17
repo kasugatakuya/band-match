@@ -1,9 +1,12 @@
 package httpapi
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 
 	"bandmatch/internal/store"
 )
@@ -151,6 +154,31 @@ func (s *Server) handleMyPosts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"posts": posts})
 }
 
+// maxPostsPerKind は、1人が持てる記事数の上限(メンバー募集・加入希望それぞれ)。
+// 締め切った記事も数える。枠を空けるには記事を削除する。
+const maxPostsPerKind = 3
+
+// checkPostLimit は、kind の記事が上限に達していたらエラーを返して false を返す。
+// excludeID には編集中の記事の ID を渡す(新規作成なら uuid.Nil)。
+func (s *Server) checkPostLimit(w http.ResponseWriter, r *http.Request, userID uuid.UUID, kind string, excludeID uuid.UUID) bool {
+	n, err := s.q.CountPostsByUserAndKind(r.Context(), store.CountPostsByUserAndKindParams{
+		UserID: userID, Kind: kind, ExcludeID: excludeID,
+	})
+	if err != nil {
+		s.internalError(w, r, err)
+		return false
+	}
+	if n >= maxPostsPerKind {
+		label := "メンバー募集"
+		if kind == "join" {
+			label = "加入希望"
+		}
+		writeError(w, 409, "post_limit", fmt.Sprintf("%sの記事は%d件までです。新しく投稿するには、不要な記事を削除してください。", label, maxPostsPerKind))
+		return false
+	}
+	return true
+}
+
 func (s *Server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	u := currentUser(r)
 	var in postInput
@@ -168,6 +196,9 @@ func (s *Server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	if n >= 10 {
 		writeError(w, 429, "rate_limited", "1日に投稿できる記事は10件までです。")
+		return
+	}
+	if !s.checkPostLimit(w, r, u.ID, in.Kind, uuid.Nil) {
 		return
 	}
 	p, err := s.q.CreatePost(r.Context(), store.CreatePostParams{
@@ -197,6 +228,10 @@ func (s *Server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	if in.Status != "open" && in.Status != "closed" {
 		invalid(w, "募集状況の指定が正しくありません。")
+		return
+	}
+	// 種類を変更して上限を超えるのを防ぐ(編集中の記事自身は数えない)
+	if !s.checkPostLimit(w, r, u.ID, in.Kind, id) {
 		return
 	}
 	// WHERE に user_id を含めているので、他人の記事は更新されず「見つからない」扱いになる

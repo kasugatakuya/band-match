@@ -48,3 +48,8 @@ DELETE FROM posts WHERE id = $1 AND user_id = $2;
 
 -- name: CountRecentPostsByUser :one
 SELECT count(*) FROM posts WHERE user_id = $1 AND created_at > now() - interval '1 day';
+
+-- name: CountPostsByUserAndKind :one
+-- 種類ごとの記事数(上限の判定用)。編集時は編集中の記事自身を除いて数える。
+SELECT count(*) FROM posts
+WHERE user_id = sqlc.arg(user_id) AND kind = sqlc.arg(kind) AND id <> sqlc.arg(exclude_id);

@@ -12,6 +12,25 @@ import (
 	"github.com/google/uuid"
 )
 
+const countPostsByUserAndKind = `-- name: CountPostsByUserAndKind :one
+SELECT count(*) FROM posts
+WHERE user_id = $1 AND kind = $2 AND id <> $3
+`
+
+type CountPostsByUserAndKindParams struct {
+	UserID    uuid.UUID
+	Kind      string
+	ExcludeID uuid.UUID
+}
+
+// 種類ごとの記事数(上限の判定用)。編集時は編集中の記事自身を除いて数える。
+func (q *Queries) CountPostsByUserAndKind(ctx context.Context, arg CountPostsByUserAndKindParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countPostsByUserAndKind, arg.UserID, arg.Kind, arg.ExcludeID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countRecentPostsByUser = `-- name: CountRecentPostsByUser :one
 SELECT count(*) FROM posts WHERE user_id = $1 AND created_at > now() - interval '1 day'
 `
