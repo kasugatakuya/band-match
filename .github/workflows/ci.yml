@@ -51,5 +51,7 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # LayoutProps などの型は Next.js が生成するので、型チェックの前に作っておく
+      - run: pnpm exec next typegen
       - run: pnpm exec tsc --noEmit
       - run: pnpm build
