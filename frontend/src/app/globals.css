@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-zen), "Hiragino Sans", "Noto Sans JP", sans-serif;
+
+  --color-paper: #f5f1ea;
+  --color-card: #fffdf9;
+  --color-ink: #1d1a17;
+  --color-muted: #6f675e;
+  --color-line: #ddd5c8;
+  --color-accent: #d6341c;
+  --color-accent-dark: #b02a15;
+  --color-join: #0d6b80;
+  --color-sun: #f2b632;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* フォームの共通スタイル */
+@utility field {
+  @apply w-full rounded-md border border-line bg-white px-3 py-2.5 text-base text-ink placeholder:text-muted/60 focus:border-ink focus:outline-2 focus:outline-offset-1 focus:outline-ink/20;
+}
+
+/* セレクトボックス: ブラウザ標準の矢印を消し、右端に固定サイズの矢印を描く */
+select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  cursor: pointer;
+}

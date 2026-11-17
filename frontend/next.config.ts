@@ -1,0 +1,23 @@
+import type { NextConfig } from "next";
+
+// Go の API サーバー。ブラウザからは常にこのサイトの /api 経由で呼ぶ
+// (ログイン Cookie を自サイトのものとして扱うため)。
+const backendUrl = (process.env.BACKEND_URL ?? "http://localhost:8080").replace(/\/$/, "");
+
+const nextConfig: NextConfig = {
+  cacheComponents: true,
+  partialPrefetching: true,
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
+  },
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
+  },
+};
+
+export default nextConfig;
